@@ -1,0 +1,40 @@
+name: Pruebas
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Compilar
+        run: |
+          mkdir -p build/classes
+          javac -encoding UTF-8 -d build/classes -cp lib/junit-platform-console-standalone-6.1.3.jar $(find src test -name "*.java")
+
+      - name: Ejecutar las pruebas
+        run: |
+          java -jar lib/junit-platform-console-standalone-6.1.3.jar execute \
+            --class-path build/classes \
+            --scan-class-path \
+            --reports-dir=build/test-results
+
+      - name: Guardar el reporte
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-pruebas
+          path: build/test-results
